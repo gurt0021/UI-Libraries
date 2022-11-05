@@ -1346,7 +1346,7 @@ do
 			icon.BackgroundTransparency = 1
 			icon.Size = fromOffset(16, 16)
 			icon.Position = UDim2.new(0, 12, 0.5, 0)
-			icon.Image = "rbxassetid://5012544693"
+			icon.Image = "rbxassetid://11473497579"
 			icon.ImageTransparency = 0.65
 			icon.Parent = main
 			icon.ZIndex = 2
