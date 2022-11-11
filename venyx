@@ -1681,130 +1681,205 @@ do
 		return slider
 	end
 	
-	function section:addDropdown(title, list, callback)
-		local dropdown = utility:Create("Frame", {
-			Name = "Dropdown",
-			Parent = self.container,
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 0, 30),
-			ClipsDescendants = true
-		}, {
-			utility:Create("UIListLayout", {
-				SortOrder = Enum.SortOrder.LayoutOrder,
-				Padding = UDim.new(0, 4)
-			}),
-			utility:Create("ImageLabel", {
-				Name = "Search",
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				Size = UDim2.new(1, 0, 0, 30),
-				ZIndex = 2,
-				Image = "rbxassetid://5028857472",
-				ImageColor3 = themes.DarkContrast,
-				ScaleType = Enum.ScaleType.Slice,
-				SliceCenter = Rect.new(2, 2, 298, 298)
-			}, {
-				utility:Create("TextBox", {
-					Name = "TextBox",
-					AnchorPoint = Vector2.new(0, 0.5),
-					BackgroundTransparency = 1,
-					TextTruncate = Enum.TextTruncate.AtEnd,
-					Position = UDim2.new(0, 10, 0.5, 1),
-					Size = UDim2.new(1, -42, 1, 0),
-					ZIndex = 3,
-					Font = Enum.Font.Gotham,
-					Text = title,
-					TextColor3 = themes.TextColor,
-					TextSize = 12,
-					TextTransparency = 0.10000000149012,
-					TextXAlignment = Enum.TextXAlignment.Left
-				}),
-				utility:Create("ImageButton", {
-					Name = "Button",
-					BackgroundTransparency = 1,
-					BorderSizePixel = 0,
-					Position = UDim2.new(1, -28, 0.5, -9),
-					Size = UDim2.new(0, 18, 0, 18),
-					ZIndex = 3,
-					Image = "rbxassetid://5012539403",
-					ImageColor3 = themes.TextColor,
-					SliceCenter = Rect.new(2, 2, 298, 298)
-				})
-			}),
-			utility:Create("ImageLabel", {
-				Name = "List",
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				Size = UDim2.new(1, 0, 1, -34),
-				ZIndex = 2,
-				Image = "rbxassetid://5028857472",
-				ImageColor3 = themes.Background,
-				ScaleType = Enum.ScaleType.Slice,
-				SliceCenter = Rect.new(2, 2, 298, 298)
-			}, {
-				utility:Create("ScrollingFrame", {
-					Name = "Frame",
-					Active = true,
-					BackgroundTransparency = 1,
-					BorderSizePixel = 0,
-					Position = UDim2.new(0, 4, 0, 4),
-					Size = UDim2.new(1, -8, 1, -8),
-					CanvasPosition = Vector2.new(0, 28),
-					CanvasSize = UDim2.new(0, 0, 0, 120),
-					ZIndex = 2,
-					ScrollBarThickness = 3,
-					ScrollBarImageColor3 = themes.DarkContrast
-				}, {
-					utility:Create("UIListLayout", {
-						SortOrder = Enum.SortOrder.LayoutOrder,
-						Padding = UDim.new(0, 4)
-					})
-				})
-			})
-		})
-		
-		table.insert(self.modules, dropdown)
-		--self:Resize()
-		
-		local search = dropdown.Search
+	function section:addDropdown(name, list, value, callback)
+		value = value or list[1]
+		callback = callback or function() end
+
+		local mainFrame = new("Frame")
+		local button = new("ImageButton")
+		local searchbox = new("TextBox") 
+		local elementsFrame = new("ScrollingFrame")
+
+		local tabbing = 0
+		local oText = value
 		local focused
-		
-		list = list or {}
-		
-		search.Button.MouseButton1Click:Connect(function()
-			if search.Button.Rotation == 0 then
-				self:updateDropdown(dropdown, nil, list, callback)
-			else
-				self:updateDropdown(dropdown, nil, nil, callback)
+		local info = TweenInfo.new(0.1)
+
+		local function UIClose(value)
+			if not focused then return end
+
+			focused = false
+			TweenService:Create(button, info, {Rotation = 0}):Play()
+
+			mainFrame:TweenSize(UDim2.new(1, 0, 0, 30), "Out", "Quad", 0.3, true)
+			local element = table.find(list, value) or findElement(list, searchbox.Text)
+			if not element then
+				searchbox.Text = oText
+				return
 			end
+
+			element = list[element]
+			searchbox.Text = string.format("%s [%s]", name, element)
+			for _, v in ipairs(elementsFrame:GetChildren()) do
+				if not v:IsA("UIListLayout") then
+					v.Visible = true
+				end
+			end
+
+			if value == oText then return end
+
+			oText = searchbox.Text
+			callback(element)
+		end
+
+		do
+			local background = new("ImageLabel")
+			local listFrame = new("ImageLabel")
+
+			local listlayout = new("UIListLayout")
+			listlayout.Parent = mainFrame
+			listlayout.Padding = UDim.new(0, 4)
+
+			local s = listlayout:Clone()
+			s.Parent = elementsFrame
+
+			mainFrame.Parent = self.container
+			mainFrame.BackgroundTransparency = 1
+			mainFrame.Size = UDim2.new(1, 0, 0, 30)
+			mainFrame.ClipsDescendants = true
+
+			background.BackgroundTransparency = 1
+			background.Size = UDim2.new(1, 0, 0, 30)
+			background.ZIndex = 2
+			background.Image = "rbxassetid://5028857472"
+			background.ImageColor3 = THEME.DarkContrast
+			background.ScaleType = "Slice"
+			background.SliceCenter = Rect.new(2, 2, 289, 289)
+			background.Parent = mainFrame
+
+			searchbox.BackgroundTransparency = 1
+			searchbox.ZIndex = 3
+			searchbox.Size = UDim2.new(1, -42, 1, 0)
+			searchbox.AnchorPoint = Vector2.new(0, 0.5)
+			searchbox.Font = "Gotham"
+			searchbox.Text = string.format("%s [%s]", name, value)
+			searchbox.TextSize = 12
+			searchbox.TextColor3 = THEME.TextColor
+			searchbox.TextTruncate = "AtEnd"
+			searchbox.TextTransparency = 0.1
+			searchbox.TextXAlignment = "Left"
+			searchbox.Position = UDim2.new(0, 10, 0.5, 1)
+			searchbox.Parent = background
+
+			button.ImageColor3 = THEME.TextColor
+			button.BackgroundTransparency = 1
+			button.ZIndex = 3
+			button.Image = "rbxassetid://5012539403"
+			button.Size = fromOffset(18, 18)
+			button.Position = UDim2.new(1, -28, 0.5, -9)
+			button.Parent = background
+
+			listFrame.BackgroundTransparency = 1
+			listFrame.Image = "rbxassetid://5028857472"
+			listFrame.ImageColor3 = THEME.Background
+			listFrame.ScaleType = "Slice"
+			listFrame.SliceCenter = Rect.new(2, 2, 298, 298)
+			listFrame.ZIndex = 2
+			listFrame.Size = UDim2.new(1, 0, 1, -34)
+			listFrame.Parent = mainFrame
+
+			elementsFrame.ClipsDescendants = true
+			elementsFrame.ZIndex = 2
+			elementsFrame.ScrollBarImageTransparency = 0
+			elementsFrame.ScrollBarThickness = 3
+			elementsFrame.ScrollBarImageColor3 = Color3.fromRGB(14, 14, 14)
+			elementsFrame.ScrollingDirection = "Y"
+			elementsFrame.Size = UDim2.new(1, -8, 1, -8)
+			elementsFrame.BackgroundTransparency = 1
+			elementsFrame.Parent = listFrame
+
+			s:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				elementsFrame.CanvasSize = fromOffset(0, s.AbsoluteContentSize.Y)
+				if focused then
+					mainFrame:TweenSize(UDim2.new(1, 0, 0, math.clamp(40 + s.AbsoluteContentSize.Y, 40, 140)), "Out", "Quad", 0.3, true)
+				end
+			end)
+
+			for _, v in ipairs(list) do
+				local button = new("ImageButton")
+				button.Size = UDim2.new(1, 0, 0, 30)
+				button.ZIndex = 2
+				button.Image = "rbxassetid://5028857472"
+				button.ImageColor3 = THEME.DarkContrast
+				button.ScaleType = Enum.ScaleType.Slice
+				button.SliceCenter = Rect.new(2, 2, 298, 298)
+				button.BackgroundTransparency = 1
+				button.Parent = elementsFrame
+
+				local text = new("TextLabel")
+				text.BackgroundTransparency = 1
+				text.Position = UDim2.new(0, 10, 0, 0)
+				text.Size = UDim2.new(1, -10, 1, 0)
+				text.ZIndex = 3
+				text.Font = Enum.Font.Gotham
+				text.Text = v
+				text.TextColor3 = THEME.TextColor
+				text.TextSize = 12
+				text.TextXAlignment = "Left"
+				text.TextTransparency = 0.1
+				text.Parent = button
+
+				button.MouseButton1Down:Connect(function()
+					value = v
+					UIClose(value)
+				end)
+			end
+		end
+
+		local function openFrame()
+			if tabbing > tick() then return end
+
+			tabbing = tick() + 1
+			if button.Rotation == 0 then
+				TweenService:Create(button, info, {Rotation = 180}):Play()
+				mainFrame:TweenSize(UDim2.new(1, 0, 0, math.clamp(40 + elementsFrame.CanvasSize.Y.Offset, 30, 140)), "Out", "Quad", 0.3, true)
+				searchbox:CaptureFocus()
+			elseif focused then
+				focused = false
+				UIClose()
+			end	
+		end
+
+		searchbox.FocusLost:Connect(function()
+			if not focused or searchbox.Text == "" then 
+				return
+			end
+
+			UIClose(searchbox.Text)
 		end)
-		
-		search.TextBox.Focused:Connect(function()
-			if search.Button.Rotation == 0 then
-				self:updateDropdown(dropdown, nil, list, callback)
-			end
-			
+
+		searchbox.Focused:Connect(function()
+			if focused then return end
+
+			openFrame()
 			focused = true
 		end)
-		
-		search.TextBox.FocusLost:Connect(function()
-			focused = false
-		end)
-		
-		search.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
-			if focused then
-				local list = utility:Sort(search.TextBox.Text, list)
-				list = #list ~= 0 and list 
-				
-				self:updateDropdown(dropdown, nil, list, callback)
+
+		searchbox:GetPropertyChangedSignal("Text"):Connect(function()
+			local txt = searchbox.Text
+			if txt == "" then 
+				for _, v in ipairs(elementsFrame:GetChildren()) do
+					if not v:IsA("UIListLayout") then
+						v.Visible = true
+					end
+				end
+
+				return 
+			end
+
+			local len = txt:len()
+			for _, v in ipairs(elementsFrame:GetChildren()) do
+				if not v:IsA("UIListLayout") then
+					if string.sub(v:FindFirstChildOfClass("TextLabel").Text:lower(), 1, len) == txt then
+						v.Visible = true
+					else
+						v.Visible = false
+					end
+				end
 			end
 		end)
-		
-		dropdown:GetPropertyChangedSignal("Size"):Connect(function()
-			self:Resize()
-		end)
-		
-		return dropdown
+
+		button.MouseButton1Down:Connect(openFrame)
 	end
 	
 	-- class functions
