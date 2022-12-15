@@ -73,15 +73,7 @@ do
 		}
 	}
 
-
-	local THEME = {
-		Background = Color3.fromRGB(24, 24, 24),
-		Glow = Color3.fromRGB(2, 8, 2),
-		Accent = Color3.fromRGB(10, 10, 10),
-		LightContrast = Color3.fromRGB(20, 20, 20),
-		DarkContrast = Color3.fromRGB(34, 34, 34),
-		TextColor = Color3.fromRGB(255, 255, 255)
-	}
+-- Dumb Mistake, Theme attempt #1
 	
 	local TAB_INFO = TweenInfo.new(0.5)
 
